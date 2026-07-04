@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Sako's Yerevan Adventure</title>
     <style>
         body {
@@ -17,6 +17,7 @@
             justify-content: center;
             min-height: 100vh;
             overflow: hidden;
+            touch-action: none; /* Prevents double-tap zoom issues on mobile browsers */
         }
 
         h1 {
@@ -24,25 +25,34 @@
             font-size: 1.8rem;
             color: #ff9f43;
             text-shadow: 2px 2px #000;
+            text-align: center;
         }
 
         p {
             margin: 5px 0 15px 0;
             color: #ccc;
             font-size: 0.9rem;
+            text-align: center;
         }
 
         #gameContainer {
             position: relative;
+            width: 95vw;
+            max-width: 800px;
+            aspect-ratio: 16 / 9; /* Keeps the ratio locked perfectly */
             box-shadow: 0 10px 30px rgba(0,0,0,0.5);
             border: 4px solid #f8a5c2; /* Pink Tufa shade */
             border-radius: 8px;
             user-select: none;
             -webkit-user-select: none;
+            box-sizing: border-box;
+            overflow: hidden;
         }
 
         canvas {
             display: block;
+            width: 100%;
+            height: 100%;
             background: linear-gradient(to bottom, #0b0d1b 0%, #171c35 40%, #3d2250 70%, #7c314c 90%, #d46a43 100%);
         }
 
@@ -96,7 +106,6 @@
             color: #ffeaa7;
         }
 
-        /* Mobile Touch Controls */
         #touch-controls {
             position: absolute;
             bottom: 15px;
@@ -187,12 +196,53 @@
             box-shadow: 0 1px #d97d24;
             transform: translateY(3px);
         }
+
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 1.3rem;
+            }
+            p {
+                font-size: 0.75rem;
+                margin-bottom: 8px;
+            }
+            #ui-layer {
+                font-size: 0.9rem;
+            }
+            #journey-meter {
+                width: 140px;
+                height: 8px;
+                top: 30px;
+            }
+            #landmark-label {
+                top: 42px;
+                font-size: 0.6rem;
+            }
+            .touch-btn {
+                width: 45px;
+                height: 45px;
+                font-size: 1.2rem;
+            }
+            .screen-overlay h2 {
+                font-size: 1.4rem !important;
+                margin-bottom: 2px !important;
+            }
+            .screen-overlay p {
+                font-size: 0.75rem !important;
+                padding: 0 15px;
+                line-height: 1.3 !important;
+            }
+            button {
+                padding: 8px 16px;
+                font-size: 0.9rem;
+                margin-top: 10px;
+            }
+        }
     </style>
 </head>
 <body>
 
-    <h1>Sako's Yerevan Adventure</h1>
-    <p>Use <b>Arrow Keys / WASD</b> to run and jump. Press <b>F or X</b> to shoot Apricot Pits at pigeons & cats!</p>
+    <h1>Sako's Yerevan Adventure 🇦🇲</h1>
+    <p>Use <b>Arrow Keys / WASD</b> to run and jump. Press <b>F or X</b> to shoot Apricot Pits!</p>
 
     <div id="gameContainer">
         <canvas id="gameCanvas" width="800" height="450"></canvas>
@@ -303,7 +353,6 @@
                 osc.start(now);
                 osc.stop(now + 0.2);
             } else if (type === 'win') {
-                // Play victory arpeggio
                 const notes = [261.63, 329.63, 392.00, 523.25]; // C4, E4, G4, C5
                 notes.forEach((freq, idx) => {
                     const noteOsc = audioCtx.createOscillator();
@@ -327,17 +376,14 @@
         let score = 0;
         let lives = 3;
         let cameraX = 0;
-        const levelWidth = 6000; // Expanded scrolling width!
+        const levelWidth = 6000; 
 
-        // World Engine Constants
         const gravity = 0.5;
         const friction = 0.85;
 
-        // Key bindings state
         const keys = { right: false, left: false, up: false, shoot: false };
         let shootCooldown = 0;
 
-        // --- GAME ENTITIES ---
         const sako = {
             x: 100,
             y: 300,
@@ -357,7 +403,7 @@
         let cats = []; 
         let projectiles = [];
         let particles = [];
-        let clockTower = { x: 5800, y: 150, width: 80, height: 250 }; // Moved to end of 6000px map
+        let clockTower = { x: 5800, y: 150, width: 80, height: 250 };
 
         function initLevel() {
             score = 0;
@@ -370,7 +416,6 @@
             projectiles = [];
             particles = [];
 
-            // 1. Concrete ground and blocks (Pink Tufa aesthetics)
             platforms = [
                 // Ground safety floors
                 { x: 0, y: 400, width: 800, height: 50 },
@@ -410,7 +455,6 @@
                 { x: 5600, y: 320, width: 150, height: 20 }
             ];
 
-            // 2. Scatter sweet Armenian apricots
             apricots = [
                 // Cascade
                 { x: 350, y: 260, collected: false },
@@ -438,7 +482,6 @@
                 { x: 5650, y: 280, collected: false }
             ];
 
-            // 3. Enemy Pigeons patrolling platforms
             pigeons = [
                 { x: 400, y: 275, startX: 310, endX: 430, vx: 1.5, size: 20 },
                 { x: 1050, y: 295, startX: 1010, endX: 1110, vx: 2, size: 20 },
@@ -448,7 +491,6 @@
                 { x: 5150, y: 155, startX: 5110, endX: 5230, vx: 1.8, size: 20 }
             ];
 
-            // 4. Stray Cats (Katus) wandering the ground floor
             cats = [
                 { x: 500, y: 375, startX: 350, endX: 700, vx: 1, direction: 1 },
                 { x: 1300, y: 375, startX: 1100, endX: 1500, vx: 1.2, direction: 1 },
@@ -539,10 +581,8 @@
         function update() {
             if (!gameRunning) return;
 
-            // Cooldown ticks
             if (shootCooldown > 0) shootCooldown--;
 
-            // Apply movement input
             if (keys.right) {
                 sako.vx = sako.speed;
                 sako.facing = 'right';
@@ -553,31 +593,25 @@
                 sako.vx *= friction;
             }
 
-            // Jump
             if (keys.up && sako.grounded) {
                 sako.vy = -sako.jumpStrength;
                 sako.grounded = false;
                 playSound('jump');
             }
 
-            // Shoot action
             if (keys.shoot) {
                 fireApricotPit();
             }
 
-            // Gravity applied
             sako.vy += gravity;
 
-            // Update positions
             sako.x += sako.vx;
             sako.y += sako.vy;
             sako.grounded = false;
 
-            // Map Bounds limits
             if (sako.x < 0) sako.x = 0;
             if (sako.x > levelWidth - sako.width) sako.x = levelWidth - sako.width;
 
-            // Solid Top platform collisions
             platforms.forEach(plat => {
                 if (sako.x + sako.width > plat.x && 
                     sako.x < plat.x + plat.width &&
@@ -590,12 +624,10 @@
                 }
             });
 
-            // Update projectiles
             for (let i = projectiles.length - 1; i >= 0; i--) {
                 const proj = projectiles[i];
                 proj.x += proj.vx;
 
-                // Hit platforms check
                 let projDestroyed = false;
                 platforms.forEach(plat => {
                     if (proj.x + proj.width > plat.x && proj.x < plat.x + plat.width &&
@@ -605,13 +637,11 @@
                     }
                 });
 
-                // Check out of range
                 if (proj.x < cameraX || proj.x > cameraX + canvas.width || projDestroyed) {
                     projectiles.splice(i, 1);
                     continue;
                 }
 
-                // Check hits against Pigeons
                 for (let j = pigeons.length - 1; j >= 0; j--) {
                     const pig = pigeons[j];
                     if (proj.x + proj.width > pig.x && proj.x < pig.x + pig.size &&
@@ -627,7 +657,6 @@
                     }
                 }
 
-                // Check hits against Stray Cats
                 if (projectiles[i]) { 
                     for (let j = cats.length - 1; j >= 0; j--) {
                         const cat = cats[j];
@@ -646,7 +675,6 @@
                 }
             }
 
-            // Update particles
             for (let i = particles.length - 1; i >= 0; i--) {
                 const p = particles[i];
                 p.x += p.vx;
@@ -657,17 +685,14 @@
                 }
             }
 
-            // Fall off safety
             if (sako.y > canvas.height) {
                 loseLife();
             }
 
-            // Camera scroll calculations
             cameraX = sako.x - canvas.width / 4;
             if (cameraX < 0) cameraX = 0;
             if (cameraX > levelWidth - canvas.width) cameraX = levelWidth - canvas.width;
 
-            // Journey Progress Updates
             const progressPct = Math.min(100, Math.max(0, (sako.x / levelWidth) * 100));
             document.getElementById('journey-progress').style.width = `${progressPct}%`;
             
@@ -684,7 +709,6 @@
                 landmarkEl.innerText = "VERNISSAGE MARKET";
             }
 
-            // Item collector
             apricots.forEach(apricot => {
                 if (!apricot.collected && 
                     sako.x + sako.width > apricot.x - 10 && sako.x < apricot.x + 10 &&
@@ -697,21 +721,18 @@
                 }
             });
 
-            // Pigeon patrolling updates
             pigeons.forEach(pigeon => {
                 pigeon.x += pigeon.vx;
                 if (pigeon.x > pigeon.endX || pigeon.x < pigeon.startX) {
                     pigeon.vx *= -1;
                 }
 
-                // Collision Box
                 if (sako.x + sako.width > pigeon.x && sako.x < pigeon.x + pigeon.size &&
                     sako.y + sako.height > pigeon.y && sako.y < pigeon.y + pigeon.size) {
                     loseLife();
                 }
             });
 
-            // Stray cats update loop
             cats.forEach(cat => {
                 cat.x += cat.vx * cat.direction;
                 if (cat.x > cat.endX) {
@@ -720,14 +741,12 @@
                     cat.direction = 1;
                 }
 
-                // Collision check
                 if (sako.x + sako.width > cat.x && sako.x < cat.x + 30 &&
                     sako.y + sako.height > cat.y && sako.y < cat.y + 25) {
                     loseLife();
                 }
             });
 
-            // Reached clock tower win condition
             if (sako.x + sako.width > clockTower.x && sako.x < clockTower.x + clockTower.width) {
                 endGame(true);
             }
@@ -906,11 +925,9 @@
                 }
             }
 
-            // Northern Avenue stylish architecture outline (2400 - 3600)
             if (cameraX > 1600 && cameraX < 4000) {
                 const northX = 2700 - cascadeOffset;
                 ctx.fillStyle = "rgba(112, 59, 90, 0.2)";
-                // Modern column shapes
                 ctx.fillRect(northX, 150, 150, 250);
                 ctx.fillRect(northX + 200, 100, 120, 300);
                 ctx.fillStyle = "rgba(150, 80, 120, 0.3)";
@@ -939,42 +956,35 @@
             if (cameraX > 4000) {
                 const vernX = 5100 - cascadeOffset;
                 ctx.fillStyle = "rgba(225, 112, 85, 0.25)";
-                // Art gallery hanging panels & stalls
                 ctx.fillRect(vernX, 280, 120, 120);
                 ctx.fillRect(vernX + 220, 280, 120, 120);
                 
-                // Souvenir umbrellas
                 ctx.beginPath();
                 ctx.arc(vernX + 60, 280, 70, Math.PI, 0);
                 ctx.arc(vernX + 280, 280, 70, Math.PI, 0);
                 ctx.fill();
             }
 
-            // Render platforms
             platforms.forEach(plat => {
                 ctx.fillStyle = '#e17055'; 
                 ctx.fillRect(plat.x, plat.y, plat.width, plat.height);
                 
-                // Texture borders
                 ctx.strokeStyle = '#fab1a0';
                 ctx.lineWidth = 2;
                 ctx.strokeRect(plat.x, plat.y, plat.width, plat.height);
             });
 
-            // Render Apricot collectibles
             apricots.forEach(apricot => {
                 if (!apricot.collected) {
                     ctx.beginPath();
                     ctx.arc(apricot.x, apricot.y, 8, 0, Math.PI * 2);
                     ctx.fillStyle = '#ffb142'; 
                     ctx.fill();
-                    // Stem leaf
                     ctx.fillStyle = '#2ed573';
                     ctx.fillRect(apricot.x, apricot.y - 11, 3, 4);
                 }
             });
 
-            // Render Projectiles (Apricot Pits)
             projectiles.forEach(proj => {
                 ctx.fillStyle = '#a0522d'; 
                 ctx.beginPath();
@@ -985,7 +995,6 @@
                 ctx.stroke();
             });
 
-            // Render Particles
             particles.forEach(p => {
                 ctx.save();
                 ctx.globalAlpha = p.alpha;
@@ -994,7 +1003,6 @@
                 ctx.restore();
             });
 
-            // Render Pigeons
             const timeFactor = Date.now() / 150;
             pigeons.forEach(pigeon => {
                 ctx.fillStyle = '#a4b0be';
@@ -1002,7 +1010,6 @@
                 ctx.arc(pigeon.x + 10, pigeon.y + 10, 9, 0, Math.PI * 2);
                 ctx.fill();
                 
-                // Animated flapping wing
                 const wingYOffset = Math.sin(timeFactor) * 4;
                 ctx.fillStyle = '#747d8c';
                 ctx.beginPath();
@@ -1012,20 +1019,15 @@
                 ctx.closePath();
                 ctx.fill();
 
-                // Beak direction
                 ctx.fillStyle = '#ffa502';
                 ctx.fillRect(pigeon.x + (pigeon.vx > 0 ? 16 : 0), pigeon.y + 8, 4, 3);
             });
 
-            // Render Stray Cats (Katus)
             cats.forEach(cat => {
                 ctx.fillStyle = '#ff9f43'; 
-                // Body
                 ctx.fillRect(cat.x, cat.y + 8, 24, 12);
-                // Head
                 ctx.fillRect(cat.x + (cat.direction === 1 ? 16 : 0), cat.y, 10, 10);
                 
-                // Triangular ears
                 ctx.beginPath();
                 const earBaseX = cat.x + (cat.direction === 1 ? 16 : 0);
                 ctx.moveTo(earBaseX, cat.y);
@@ -1037,7 +1039,6 @@
                 ctx.fillStyle = '#ff9f43';
                 ctx.fill();
 
-                // Wagging tail animation
                 const tailWag = Math.sin(Date.now() / 100) * 4;
                 ctx.strokeStyle = '#ff9f43';
                 ctx.lineWidth = 3;
@@ -1051,15 +1052,12 @@
                 );
                 ctx.stroke();
 
-                // Tiny legs
-                ctx.fillStyle = '#ff9f43';
                 ctx.fillRect(cat.x + 2, cat.y + 20, 3, 5);
                 ctx.fillRect(cat.x + 8, cat.y + 20, 3, 5);
                 ctx.fillRect(cat.x + 14, cat.y + 20, 3, 5);
                 ctx.fillRect(cat.x + 19, cat.y + 20, 3, 5);
             });
 
-            // Render the final Goal (Republic Square Clock Tower)
             ctx.fillStyle = '#d1ccc0'; 
             ctx.fillRect(clockTower.x, clockTower.y, clockTower.width, clockTower.height);
             ctx.fillStyle = '#f7f1e3'; 
@@ -1070,7 +1068,6 @@
             ctx.fillRect(clockTower.x + 39, clockTower.y + 38, 2, 15);
             ctx.fillRect(clockTower.x + 39, clockTower.y + 49, 10, 2);
 
-            // Render Sako (Main Character)
             ctx.fillStyle = '#2f3542'; 
             ctx.fillRect(sako.x + 4, sako.y + 32, sako.width - 8, 16);
             ctx.fillStyle = '#1e90ff'; 
@@ -1078,7 +1075,6 @@
             ctx.fillStyle = '#ffeaa7'; 
             ctx.fillRect(sako.x + 6, sako.y, sako.width - 12, 14);
             
-            // Sako's signature cap
             ctx.fillStyle = '#ff4757';
             ctx.fillRect(sako.x + 4, sako.y - 4, sako.width - 8, 5);
             if (sako.facing === 'right') {
