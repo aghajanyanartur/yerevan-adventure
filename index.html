@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Sako's Yerevan Adventure</title>
     <style>
         body {
@@ -16,37 +16,42 @@
             align-items: center;
             justify-content: center;
             min-height: 100vh;
+            min-height: -webkit-fill-available; /* Fix for mobile Safari viewport heights */
             overflow: hidden;
-            touch-action: none; /* Prevents double-tap zoom issues on mobile browsers */
+            touch-action: none; /* Block double-tap to zoom or swipe-to-scroll */
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
         }
 
         h1 {
-            margin: 5px 0;
-            font-size: 1.8rem;
+            margin: 2px 0;
+            font-size: 1.5rem;
             color: #ff9f43;
             text-shadow: 2px 2px #000;
             text-align: center;
         }
 
-        p {
-            margin: 5px 0 15px 0;
+        p.instructions {
+            margin: 2px 0 8px 0;
             color: #ccc;
-            font-size: 0.9rem;
+            font-size: 0.8rem;
             text-align: center;
         }
 
         #gameContainer {
             position: relative;
-            width: 95vw;
+            /* This is the magic responsive formula: */
+            /* It scales with screen width, but caps width if screen height is too short to fit the 16:9 canvas! */
+            width: min(95vw, calc(72vh * 16 / 9)); 
             max-width: 800px;
-            aspect-ratio: 16 / 9; /* Keeps the ratio locked perfectly */
+            aspect-ratio: 16 / 9;
             box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            border: 4px solid #f8a5c2; /* Pink Tufa shade */
+            border: 3px solid #f8a5c2; /* Pink Tufa shade */
             border-radius: 8px;
-            user-select: none;
-            -webkit-user-select: none;
             box-sizing: border-box;
             overflow: hidden;
+            background: #111;
         }
 
         canvas {
@@ -58,30 +63,29 @@
 
         #ui-layer {
             position: absolute;
-            top: 10px;
-            left: 10px;
-            right: 10px;
+            top: 8px;
+            left: 8px;
+            right: 8px;
             display: flex;
             justify-content: space-between;
             font-family: monospace;
-            font-size: 1.2rem;
+            font-size: 1rem;
             font-weight: bold;
-            text-shadow: 2px 2px #000;
+            text-shadow: 1px 1px 2px #000;
             pointer-events: none;
             z-index: 5;
         }
 
-        /* Journey Progress Bar */
         #journey-meter {
             position: absolute;
-            top: 40px;
+            top: 30px;
             left: 50%;
             transform: translateX(-50%);
-            width: 200px;
-            height: 12px;
+            width: 160px;
+            height: 8px;
             background: rgba(0,0,0,0.5);
-            border: 2px solid #fff;
-            border-radius: 6px;
+            border: 1.5px solid #fff;
+            border-radius: 4px;
             overflow: hidden;
             z-index: 5;
         }
@@ -95,64 +99,15 @@
 
         #landmark-label {
             position: absolute;
-            top: 56px;
+            top: 42px;
             left: 50%;
             transform: translateX(-50%);
-            font-size: 0.75rem;
+            font-size: 0.65rem;
             font-weight: bold;
             font-family: monospace;
             text-shadow: 1px 1px #000;
             z-index: 5;
             color: #ffeaa7;
-        }
-
-        #touch-controls {
-            position: absolute;
-            bottom: 15px;
-            left: 15px;
-            right: 15px;
-            display: flex;
-            justify-content: space-between;
-            pointer-events: none;
-            z-index: 10;
-        }
-
-        .touch-btn-group {
-            display: flex;
-            gap: 12px;
-            pointer-events: auto;
-        }
-
-        .touch-btn {
-            width: 60px;
-            height: 60px;
-            background: rgba(255, 255, 255, 0.25);
-            backdrop-filter: blur(4px);
-            -webkit-backdrop-filter: blur(4px);
-            border: 2px solid rgba(255, 255, 255, 0.4);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 1.8rem;
-            font-weight: bold;
-            cursor: pointer;
-            user-select: none;
-            touch-action: manipulation;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-        }
-
-        .touch-btn:active {
-            background: rgba(255, 255, 255, 0.5);
-            transform: scale(0.9);
-        }
-
-        /* Hide touch controls on desktop by default */
-        @media (hover: hover) and (pointer: fine) {
-            #touch-controls {
-                display: none;
-            }
         }
 
         .screen-overlay {
@@ -167,74 +122,120 @@
             align-items: center;
             justify-content: center;
             border-radius: 4px;
-            transition: opacity 0.3s ease;
             z-index: 20;
+            padding: 10px;
+            box-sizing: border-box;
         }
 
         .screen-overlay.hidden {
             display: none;
         }
 
+        .screen-overlay h2 {
+            margin: 0 0 5px 0;
+            text-align: center;
+        }
+
+        .screen-overlay p {
+            margin: 5px 0;
+            font-size: 0.85rem;
+            line-height: 1.3;
+        }
+
         button {
             background: #ff9f43;
             border: none;
             color: white;
-            padding: 12px 24px;
-            font-size: 1.1rem;
+            padding: 10px 20px;
+            font-size: 1rem;
             font-weight: bold;
             border-radius: 4px;
             cursor: pointer;
-            box-shadow: 0 4px #d97d24;
-            margin-top: 15px;
-        }
-
-        button:hover {
-            background: #ffa852;
+            box-shadow: 0 3px #d97d24;
+            margin-top: 10px;
         }
 
         button:active {
             box-shadow: 0 1px #d97d24;
-            transform: translateY(3px);
+            transform: translateY(2px);
         }
 
-        @media (max-width: 600px) {
+        #touch-controls {
+            position: absolute;
+            bottom: 8px;
+            left: 8px;
+            right: 8px;
+            display: flex;
+            justify-content: space-between;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        .touch-btn-group {
+            display: flex;
+            gap: 10px;
+            pointer-events: auto;
+        }
+
+        .touch-btn {
+            width: 48px;
+            height: 48px;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            border: 2px solid rgba(255, 255, 255, 0.4);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.4rem;
+            font-weight: bold;
+            cursor: pointer;
+            user-select: none;
+            touch-action: manipulation;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.3);
+        }
+
+        .touch-btn:active {
+            background: rgba(255, 255, 255, 0.5);
+            transform: scale(0.9);
+        }
+
+        /* Hide Touch Controls on Hover-capable fine-pointer screens (Desktops) */
+        @media (hover: hover) and (pointer: fine) {
+            #touch-controls {
+                display: none;
+            }
+        }
+
+        /* Landscape Mobile optimization (very short height screens) */
+        @media (max-height: 520px) {
             h1 {
-                font-size: 1.3rem;
+                display: none; /* Hide header entirely on super short screens to fit canvas */
             }
-            p {
-                font-size: 0.75rem;
-                margin-bottom: 8px;
+            p.instructions {
+                display: none; /* Hide instructions too */
             }
-            #ui-layer {
-                font-size: 0.9rem;
-            }
-            #journey-meter {
-                width: 140px;
-                height: 8px;
-                top: 30px;
-            }
-            #landmark-label {
-                top: 42px;
-                font-size: 0.6rem;
+            #touch-controls {
+                bottom: 4px;
             }
             .touch-btn {
-                width: 45px;
-                height: 45px;
-                font-size: 1.2rem;
+                width: 40px;
+                height: 40px;
+                font-size: 1.1rem;
             }
             .screen-overlay h2 {
-                font-size: 1.4rem !important;
-                margin-bottom: 2px !important;
+                font-size: 1.2rem !important;
             }
             .screen-overlay p {
-                font-size: 0.75rem !important;
-                padding: 0 15px;
-                line-height: 1.3 !important;
+                font-size: 0.7rem !important;
+                max-width: 90% !important;
             }
             button {
-                padding: 8px 16px;
-                font-size: 0.9rem;
-                margin-top: 10px;
+                padding: 6px 12px;
+                font-size: 0.8rem;
+                margin-top: 5px;
             }
         }
     </style>
@@ -242,7 +243,7 @@
 <body>
 
     <h1>Sako's Yerevan Adventure 🇦🇲</h1>
-    <p>Use <b>Arrow Keys / WASD</b> to run and jump. Press <b>F or X</b> to shoot Apricot Pits!</p>
+    <p class="instructions">Use <b>Arrow Keys / WASD</b> to run and jump. Press <b>F or X</b> to shoot Apricot Pits!</p>
 
     <div id="gameContainer">
         <canvas id="gameCanvas" width="800" height="450"></canvas>
@@ -254,21 +255,21 @@
 
         <!-- Start Screen -->
         <div id="startScreen" class="screen-overlay">
-            <h2 style="color: #ff9f43; font-size: 2rem; margin-bottom: 5px;">Help Sako cross Yerevan!</h2>
-            <p style="text-align: center; max-width: 400px; line-height: 1.4;">Throw sweet Yerevan apricot pits to shoo away pesky street pigeons and wild alley cats as you climb the pink Tufa brick steps toward Republic Square and Vernissage!</p>
+            <h2 style="color: #ff9f43; font-size: 1.6rem; margin-bottom: 5px;">Help Sako cross Yerevan!</h2>
+            <p style="text-align: center; max-width: 400px; line-height: 1.3;">Throw sweet Yerevan apricot pits to shoo away pesky street pigeons and wild alley cats as you climb the pink Tufa brick steps toward Republic Square!</p>
             <button onclick="startGame()">START GAME</button>
         </div>
 
         <!-- Game Over Screen -->
         <div id="gameOverScreen" class="screen-overlay hidden">
-            <h2 style="color: #ff4757; font-size: 2.5rem; margin: 0;">VAY MAMA JAN!</h2>
+            <h2 style="color: #ff4757; font-size: 2rem; margin: 0;">VAY MAE JAN!</h2>
             <p>Sako ran out of stamina.</p>
             <button onclick="restartGame()">TRY AGAIN</button>
         </div>
 
         <!-- Win Screen -->
         <div id="winScreen" class="screen-overlay hidden">
-            <h2 style="color: #2ed573; font-size: 2.5rem; margin: 0;">TSAVT TANEM!</h2>
+            <h2 style="color: #2ed573; font-size: 2rem; margin: 0;">TSAVT TANEM!</h2>
             <p id="finalScoreText">You successfully made it through all of Yerevan!</p>
             <button onclick="restartGame()">PLAY AGAIN</button>
         </div>
@@ -518,7 +519,6 @@
             }
         }
 
-        // --- KEY LISTENERS ---
         window.addEventListener('keydown', (e) => {
             initAudio(); 
             if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') keys.right = true;
@@ -925,6 +925,7 @@
                 }
             }
 
+            // Northern Avenue background pillars (2400 - 3600)
             if (cameraX > 1600 && cameraX < 4000) {
                 const northX = 2700 - cascadeOffset;
                 ctx.fillStyle = "rgba(112, 59, 90, 0.2)";
