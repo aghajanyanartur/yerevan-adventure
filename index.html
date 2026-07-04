@@ -5,71 +5,69 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Sako's Yerevan Adventure</title>
     <style>
-        body {
+        body, html {
             margin: 0;
             padding: 0;
             background: #0f101a;
             color: #fff;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            min-height: -webkit-fill-available; /* Fix for mobile Safari viewport heights */
+            width: 100%;
+            height: 100%;
+            height: 100dvh; /* Utilizes dynamic viewport height for mobile browsers */
             overflow: hidden;
-            touch-action: none; /* Block double-tap to zoom or swipe-to-scroll */
+            touch-action: none; /* Blocks dynamic double-tap and scroll behaviors */
             -webkit-touch-callout: none;
             -webkit-user-select: none;
             user-select: none;
         }
 
         h1 {
-            margin: 2px 0;
-            font-size: 1.5rem;
+            margin: 4px 0 2px 0;
+            font-size: 1.3rem;
             color: #ff9f43;
             text-shadow: 2px 2px #000;
             text-align: center;
         }
 
         p.instructions {
-            margin: 2px 0 8px 0;
+            margin: 2px 0 6px 0;
             color: #ccc;
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             text-align: center;
         }
 
         #gameContainer {
             position: relative;
-            /* This is the magic responsive formula: */
-            /* It scales with screen width, but caps width if screen height is too short to fit the 16:9 canvas! */
-            width: min(95vw, calc(72vh * 16 / 9)); 
-            max-width: 800px;
-            aspect-ratio: 16 / 9;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            border: 3px solid #f8a5c2; /* Pink Tufa shade */
-            border-radius: 8px;
+            width: 100%;
+            height: 100%;
+            height: 100dvh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
             box-sizing: border-box;
+            background: #0f101a;
             overflow: hidden;
-            background: #111;
         }
 
         canvas {
             display: block;
-            width: 100%;
-            height: 100%;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            border: 3px solid #f8a5c2; /* Pink Tufa shade */
+            border-radius: 8px;
+            box-sizing: border-box;
             background: linear-gradient(to bottom, #0b0d1b 0%, #171c35 40%, #3d2250 70%, #7c314c 90%, #d46a43 100%);
         }
 
         #ui-layer {
             position: absolute;
-            top: 8px;
-            left: 8px;
-            right: 8px;
+            top: 10px;
+            left: 10px;
+            right: 10px;
             display: flex;
             justify-content: space-between;
             font-family: monospace;
-            font-size: 1rem;
+            font-size: 0.95rem;
             font-weight: bold;
             text-shadow: 1px 1px 2px #000;
             pointer-events: none;
@@ -81,8 +79,8 @@
             top: 30px;
             left: 50%;
             transform: translateX(-50%);
-            width: 160px;
-            height: 8px;
+            width: 150px;
+            height: 6px;
             background: rgba(0,0,0,0.5);
             border: 1.5px solid #fff;
             border-radius: 4px;
@@ -99,10 +97,10 @@
 
         #landmark-label {
             position: absolute;
-            top: 42px;
+            top: 40px;
             left: 50%;
             transform: translateX(-50%);
-            font-size: 0.65rem;
+            font-size: 0.6rem;
             font-weight: bold;
             font-family: monospace;
             text-shadow: 1px 1px #000;
@@ -123,7 +121,7 @@
             justify-content: center;
             border-radius: 4px;
             z-index: 20;
-            padding: 10px;
+            padding: 15px;
             box-sizing: border-box;
         }
 
@@ -138,16 +136,18 @@
 
         .screen-overlay p {
             margin: 5px 0;
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             line-height: 1.3;
+            text-align: center;
+            max-width: 400px;
         }
 
         button {
             background: #ff9f43;
             border: none;
             color: white;
-            padding: 10px 20px;
-            font-size: 1rem;
+            padding: 8px 16px;
+            font-size: 0.9rem;
             font-weight: bold;
             border-radius: 4px;
             cursor: pointer;
@@ -162,9 +162,10 @@
 
         #touch-controls {
             position: absolute;
-            bottom: 8px;
-            left: 8px;
-            right: 8px;
+            bottom: 12px;
+            bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+            left: 16px;
+            right: 16px;
             display: flex;
             justify-content: space-between;
             pointer-events: none;
@@ -173,14 +174,14 @@
 
         .touch-btn-group {
             display: flex;
-            gap: 10px;
+            gap: 12px;
             pointer-events: auto;
         }
 
         .touch-btn {
-            width: 48px;
-            height: 48px;
-            background: rgba(255, 255, 255, 0.2);
+            width: 46px;
+            height: 46px;
+            background: rgba(255, 255, 255, 0.25);
             backdrop-filter: blur(4px);
             -webkit-backdrop-filter: blur(4px);
             border: 2px solid rgba(255, 255, 255, 0.4);
@@ -189,7 +190,7 @@
             align-items: center;
             justify-content: center;
             color: white;
-            font-size: 1.4rem;
+            font-size: 1.25rem;
             font-weight: bold;
             cursor: pointer;
             user-select: none;
@@ -202,40 +203,25 @@
             transform: scale(0.9);
         }
 
-        /* Hide Touch Controls on Hover-capable fine-pointer screens (Desktops) */
+        /* Hide touch buttons on fine desktop pointers */
         @media (hover: hover) and (pointer: fine) {
             #touch-controls {
                 display: none;
             }
         }
 
-        /* Landscape Mobile optimization (very short height screens) */
-        @media (max-height: 520px) {
-            h1 {
-                display: none; /* Hide header entirely on super short screens to fit canvas */
-            }
-            p.instructions {
-                display: none; /* Hide instructions too */
+        /* Hide screen labels on extra small portrait frames */
+        @media (max-height: 500px) {
+            h1, p.instructions {
+                display: none !important;
             }
             #touch-controls {
-                bottom: 4px;
+                bottom: 6px;
             }
             .touch-btn {
                 width: 40px;
                 height: 40px;
                 font-size: 1.1rem;
-            }
-            .screen-overlay h2 {
-                font-size: 1.2rem !important;
-            }
-            .screen-overlay p {
-                font-size: 0.7rem !important;
-                max-width: 90% !important;
-            }
-            button {
-                padding: 6px 12px;
-                font-size: 0.8rem;
-                margin-top: 5px;
             }
         }
     </style>
@@ -246,6 +232,7 @@
     <p class="instructions">Use <b>Arrow Keys / WASD</b> to run and jump. Press <b>F or X</b> to shoot Apricot Pits!</p>
 
     <div id="gameContainer">
+        <!-- Native Canvas starts at 800x450 (which is 16:9 aspect ratio) -->
         <canvas id="gameCanvas" width="800" height="450"></canvas>
         
         <div id="ui-layer">
@@ -255,21 +242,21 @@
 
         <!-- Start Screen -->
         <div id="startScreen" class="screen-overlay">
-            <h2 style="color: #ff9f43; font-size: 1.6rem; margin-bottom: 5px;">Help Sako cross Yerevan!</h2>
-            <p style="text-align: center; max-width: 400px; line-height: 1.3;">Throw sweet Yerevan apricot pits to shoo away pesky street pigeons and wild alley cats as you climb the pink Tufa brick steps toward Republic Square!</p>
+            <h2 style="color: #ff9f43; font-size: 1.5rem; margin-bottom: 5px;">Help Sako cross Yerevan!</h2>
+            <p>Throw sweet Yerevan apricot pits to shoo away pesky street pigeons and wild alley cats as you climb the pink Tufa brick steps toward Republic Square!</p>
             <button onclick="startGame()">START GAME</button>
         </div>
 
         <!-- Game Over Screen -->
         <div id="gameOverScreen" class="screen-overlay hidden">
-            <h2 style="color: #ff4757; font-size: 2rem; margin: 0;">VAY MAE JAN!</h2>
+            <h2 style="color: #ff4757; font-size: 1.8rem; margin: 0;">VAY MAE JAN!</h2>
             <p>Sako ran out of stamina.</p>
             <button onclick="restartGame()">TRY AGAIN</button>
         </div>
 
         <!-- Win Screen -->
         <div id="winScreen" class="screen-overlay hidden">
-            <h2 style="color: #2ed573; font-size: 2rem; margin: 0;">TSAVT TANEM!</h2>
+            <h2 style="color: #2ed573; font-size: 1.8rem; margin: 0;">TSAVT TANEM!</h2>
             <p id="finalScoreText">You successfully made it through all of Yerevan!</p>
             <button onclick="restartGame()">PLAY AGAIN</button>
         </div>
@@ -405,6 +392,38 @@
         let projectiles = [];
         let particles = [];
         let clockTower = { x: 5800, y: 150, width: 80, height: 250 };
+
+        function resizeGame() {
+            const w = window.innerWidth;
+            const h = window.innerHeight;
+            
+            // Calculate a perfect 16:9 letterbox scale to fit the window safely
+            let targetWidth = w;
+            let targetHeight = w * (9 / 16);
+            
+            if (targetHeight > h) {
+                targetHeight = h;
+                targetWidth = h * (16 / 9);
+            }
+            
+            // Subtract a minor margin padding so the border fits perfectly inside the view
+            const pad = 12;
+            let finalWidth = targetWidth - pad;
+            let finalHeight = targetHeight - (pad * 9 / 16);
+            
+            // Limit the maximum screen layout to 800x450
+            if (finalWidth > 800) {
+                finalWidth = 800;
+                finalHeight = 450;
+            }
+            
+            canvas.style.width = finalWidth + 'px';
+            canvas.style.height = finalHeight + 'px';
+        }
+
+        window.addEventListener('resize', resizeGame);
+        window.addEventListener('orientationchange', resizeGame);
+        resizeGame(); // Run immediately at load
 
         function initLevel() {
             score = 0;
